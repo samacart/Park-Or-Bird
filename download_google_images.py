@@ -5,36 +5,68 @@ import requests
 from PIL import Image
 from StringIO import StringIO
 from requests.exceptions import ConnectionError
-
 from bs4 import BeautifulSoup
 
-def GetBirdsList():
-	# Generates a list of birds for searching in a text file
-	# not the cleanest output, titles and references links will still be present
-	# delete the first 136 lines of the output file for clean text
+class GoogleImageGetter():
 
-	r = requests.get('https://en.wikipedia.org/wiki/List_of_birds_by_common_name')
-	soup = BeautifulSoup(r.content)
-	birdnames = []
-	for link in soup.find_all('a'):
-		t = link.text.encode('utf-8')
-		if t and t != "edit":
-			birdnames.append(t)
+	def __init__(self):
+		self._birds = []
+		self._parks = []
 
-	return birdnames
+	def GetBirds(self):
+		self._birds = self.GetBirdsList()
 
-def GetNationalParkList():
+	def GetParks(self):
+		self._parks = self.GetNationalParkList()
 
-	r = requests.get('https://en.wikipedia.org/wiki/List_of_national_parks_of_the_United_States')
-	soup = BeautifulSoup(r.content)
-	parknames = []
-	for th in soup.find_all('th',{'scope':'row'}):
-		for link in th.find_all('a'):
+	def Print(self, var, arg):
+
+		printList = self._birds if var.lower() == "birds" else self._parks
+
+		if arg.lower() == "names":
+			print "Current Names:\n" + ', '.join(printList)
+
+		if arg.lower() == "count":
+			print "Current Count: {}".format(len(printList))
+
+	def HaveBird(self, testBird):
+		return testBird.lower() in [b.lower for b in self._birds]
+
+	def GetBirdsList(self):
+
+		# flag is needed based on the page structure
+		# birds start after the External_links reference
+		flag = False
+
+		r = requests.get('https://en.wikipedia.org/wiki/List_of_birds_by_common_name')
+		soup = BeautifulSoup(r.content)
+		birdnames = []
+		for link in soup.find_all('a'):
 			t = link.text.encode('utf-8')
-			if t and t != "edit":
-				parknames.append(t)
+			if flag:
+				if t and t != "edit":
+					birdnames.append(t)
+			try:
+				if link['href'] == "#External_links":
+					flag = True
+			except:
+				pass
 
-	return parknames
+
+		return birdnames
+
+	def GetNationalParkList(self):
+
+		r = requests.get('https://en.wikipedia.org/wiki/List_of_national_parks_of_the_United_States')
+		soup = BeautifulSoup(r.content)
+		parknames = []
+		for th in soup.find_all('th',{'scope':'row'}):
+			for link in th.find_all('a'):
+				t = link.text.encode('utf-8')
+				if t and t != "edit":
+					parknames.append(t)
+
+		return parknames
 
 def DownloadImages(query, path):
 	# Credit where credit is due
@@ -78,6 +110,13 @@ def DownloadImages(query, path):
 		time.sleep(1.5)
  
 if __name__ == "__main__":
+
+	gi = GoogleImageGetter()
+	gi.GetBirds()
+	gi.Print("birds","count")
+	print gi.HaveBird('Ovenbird')
+
+
 #	DownloadImages('bird', 'bird_downloads')
 
 #	Only have to run this once to generate the parks list
