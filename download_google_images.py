@@ -6,6 +6,8 @@ from PIL import Image
 from StringIO import StringIO
 from requests.exceptions import ConnectionError
 
+from bs4 import BeautifulSoup
+
 # I was receiving insecure platform warnings, requests should be doing this automatically
 # it may be the python version I was testing
 # import urllib3.contrib.pyopenssl
@@ -13,6 +15,11 @@ from requests.exceptions import ConnectionError
 
 # Credit where credit is due
 # https://gist.github.com/crizCraig/2816295 
+def GetBirdsList():
+	r = requests.get('https://en.wikipedia.org/wiki/List_of_birds_by_common_name')
+	
+
+
 def DownloadImages(query, path):
 	
 	BASE_URL = 'https://ajax.googleapis.com/ajax/services/search/images?'\
@@ -52,8 +59,9 @@ def DownloadImages(query, path):
 		# Be nice to Google and they'll be nice back :)
 		time.sleep(1.5)
  
+if __name__ == "__main__":
 # Example use
-DownloadImages('bird', 'bird_downloads')
+	DownloadImages('bird', 'bird_downloads')
 
 # Real use, build out a search engine for each common name
 # https://en.wikipedia.org/wiki/List_of_birds_by_common_name
