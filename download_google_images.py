@@ -8,19 +8,37 @@ from requests.exceptions import ConnectionError
 
 from bs4 import BeautifulSoup
 
-# I was receiving insecure platform warnings, requests should be doing this automatically
-# it may be the python version I was testing
-# import urllib3.contrib.pyopenssl
-# urllib3.contrib.pyopenssl.inject_into_urllib3()
-
-# Credit where credit is due
-# https://gist.github.com/crizCraig/2816295 
 def GetBirdsList():
-	r = requests.get('https://en.wikipedia.org/wiki/List_of_birds_by_common_name')
-	
+	# Generates a list of birds for searching in a text file
+	# not the cleanest output, titles and references links will still be present
+	# delete the first 136 lines of the output file for clean text
 
+	r = requests.get('https://en.wikipedia.org/wiki/List_of_birds_by_common_name')
+	soup = BeautifulSoup(r.content)
+	birdnames = []
+	for link in soup.find_all('a'):
+		t = link.text.encode('utf-8')
+		if t and t != "edit":
+			birdnames.append(t)
+
+	return birdnames
+
+def GetNationalParkList():
+
+	r = requests.get('https://en.wikipedia.org/wiki/List_of_national_parks_of_the_United_States')
+	soup = BeautifulSoup(r.content)
+	parknames = []
+	for th in soup.find_all('th',{'scope':'row'}):
+		for link in th.find_all('a'):
+			t = link.text.encode('utf-8')
+			if t and t != "edit":
+				parknames.append(t)
+
+	return parknames
 
 def DownloadImages(query, path):
+	# Credit where credit is due
+	# https://gist.github.com/crizCraig/2816295 
 	
 	BASE_URL = 'https://ajax.googleapis.com/ajax/services/search/images?'\
 				'v=1.0&q=' + query + '&start=%d'
@@ -60,8 +78,17 @@ def DownloadImages(query, path):
 		time.sleep(1.5)
  
 if __name__ == "__main__":
-# Example use
-	DownloadImages('bird', 'bird_downloads')
+#	DownloadImages('bird', 'bird_downloads')
 
-# Real use, build out a search engine for each common name
-# https://en.wikipedia.org/wiki/List_of_birds_by_common_name
+#	Only have to run this once to generate the parks list
+#	parks = GetNationalParkList()
+#	with open("parks.txt", "wb") as outfile: 
+#		for p in parks: 
+#			outfile.write(p+"\n")
+
+#	Only have to run this once to generate the birds list
+#	birds = GetBirdsList()
+#	with open("birds.txt","wb") as outfile:
+#		for b in birds:
+#			outfile.write(b+"\n")
+
