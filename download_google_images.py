@@ -1,6 +1,7 @@
 import json
 import os
 import time
+import sys
 import requests
 from PIL import Image
 from StringIO import StringIO
@@ -13,11 +14,25 @@ class GoogleImageGetter():
 		self._birds = []
 		self._parks = []
 
-	def GetBirds(self):
+	def GetBirdsFromWiki(self):
 		self._birds = self.GetBirdsList()
 
-	def GetParks(self):
+	def GetParksFromWiki(self):
 		self._parks = self.GetNationalParkList()
+
+	def GetBirdsFromFile(self, birdFile):
+		with open(birdFile, 'rb') as f:
+			self._birds = f.read().splitlines()
+
+	def GetParksFromFile(self, parkFile):
+		with open(parkFile, 'rb') as f:
+			self._parks = f.read().splitlines()
+
+	def AddBird(self, bird):
+		self._birds.append(bird)
+
+	def AddPark(self, park):
+		self._parks.append(park)
 
 	def Print(self, var, arg):
 
@@ -30,7 +45,10 @@ class GoogleImageGetter():
 			print "Current Count: {}".format(len(printList))
 
 	def HaveBird(self, testBird):
-		return testBird.lower() in [b.lower for b in self._birds]
+		return testBird.lower() in [b.lower() for b in self._birds]
+
+	def HavePark(self, testPark):
+		return testPark.lower() in [p.lower() for p in self._parks]
 
 	def GetBirdsList(self):
 
@@ -48,7 +66,12 @@ class GoogleImageGetter():
 					birdnames.append(t)
 			try:
 				if link['href'] == "#External_links":
+					#set the flag to start collecting birds
 					flag = True
+				if link.text.encode('utf-8') == "Painted bunting":
+					#currently last bird in the list, set the flag to stop collection
+					flag = False
+
 			except:
 				pass
 
@@ -68,53 +91,84 @@ class GoogleImageGetter():
 
 		return parknames
 
-def DownloadImages(query, path):
-	# Credit where credit is due
-	# https://gist.github.com/crizCraig/2816295 
-	
-	BASE_URL = 'https://ajax.googleapis.com/ajax/services/search/images?'\
-				'v=1.0&q=' + query + '&start=%d'
- 
-	BASE_PATH = os.path.join(path, query)
- 
-	if not os.path.exists(BASE_PATH):
-		os.makedirs(BASE_PATH)
- 
-	start = 0 # Google's start query string parameter for pagination.
-	while start < 60: # Google will only return a max of 56 results.
-		r = requests.get(BASE_URL % start)
-		for image_info in json.loads(r.text)['responseData']['results']:
-			url = image_info['unescapedUrl']
+	def DownloadParkImages(self, path, maxresults=60):
+		for p in self._parks:
+			print "Downloading images for {}, max results = {}".format(p, maxresults)
 			try:
-				image_r = requests.get(url)
-			except ConnectionError, e:
-				print 'could not download %s' % url
-				continue
- 
-		# Remove file-system path characters from name.
-		title = image_info['titleNoFormatting'].replace('/', '').replace('\\', '')
+				self.DownloadImages(p, path, maxresults)
+			except:
+				with open('errors.log', 'a') as f:
+					f.write(p + '\t' + sys.exc_info())
+				pass		
+
+	def DownloadBirdImages(self, path, maxresults=60):
+		for b in self._birds:
+			print "Downloading images for {}, max results = {}".format(b, maxresults)
+			try:
+				self.DownloadImages(b, path, maxresults)
+			except:
+				with open('errors.log', 'a') as f:
+					f.write(b + '\t' + sys.exc_info())
+
+	def DownloadImages(self, query, path, maxresults):
+		# Credit where credit is due
+		# https://gist.github.com/crizCraig/2816295 
+		
+		BASE_URL = 'https://ajax.googleapis.com/ajax/services/search/images?'\
+					'v=1.0&q=' + query + '&start=%d'
 	 
-		file = open(os.path.join(BASE_PATH, '%s.jpg') % title, 'w')
-		try:
-			Image.open(StringIO(image_r.content)).save(file, 'JPEG')
-		except IOError, e:
-			print 'could not save %s' % url
-			continue
-		finally:
-			file.close()
- 
-		print start
-		start += 4 # 4 images per page.
- 
-		# Be nice to Google and they'll be nice back :)
-		time.sleep(1.5)
+		BASE_PATH = os.path.join(path, query)
+	 
+		if not os.path.exists(BASE_PATH):
+			os.makedirs(BASE_PATH)
+	 
+		start = 0 # Google's start query string parameter for pagination.
+		while start < maxresults: # Google will only return a max of 56 results.
+			r = requests.get(BASE_URL % start)
+			for image_info in json.loads(r.text)['responseData']['results']:
+				url = image_info['unescapedUrl']
+				try:
+					image_r = requests.get(url)
+				except ConnectionError, e:
+					print 'could not download %s' % url
+					continue
+	 
+			# Remove file-system path characters from name.
+			title_base = image_info['titleNoFormatting'].replace('/', '').replace('\\', '')
+			title = query + "-" + str(start) + "-" + title_base		 
+
+			file = open(os.path.join(BASE_PATH, '%s.jpg') % title, 'w')
+			try:
+				Image.open(StringIO(image_r.content)).save(file, 'JPEG')
+			except IOError, e:
+				print 'could not save %s' % url
+				continue
+			finally:
+				file.close()
+	 
+			start += 4 # 4 images per page.
+	 
+			# Be nice to Google and they'll be nice back :)
+			time.sleep(1.5)
  
 if __name__ == "__main__":
 
 	gi = GoogleImageGetter()
-	gi.GetBirds()
-	gi.Print("birds","count")
-	print gi.HaveBird('Ovenbird')
+	#gi.GetBirdsFromFile("shortbirds.txt")
+	#gi.GetBirdsFromWiki()
+	#gi.Print("birds","count")
+	#gi.DownloadBirdImages("./bird_output",2)
+	#print gi.HaveBird("Ovenbird")
+
+	#gi.GetParksFromWiki()
+	#gi.GetParksFromFile("parks.txt")
+	#gi.Print("parks","names")
+	#print gi.HavePark("Yosemite")
+
+	gi.AddPark("Prospect Park")
+	gi.AddPark("Central Park")
+	gi.Print("parks","names")
+	gi.DownloadParkImages("./park_output", 2)
 
 
 #	DownloadImages('bird', 'bird_downloads')
