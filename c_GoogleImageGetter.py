@@ -101,7 +101,7 @@ class GoogleImageGetter():
 			print "Downloading images for {}, max results = {}".format(p, maxresults)
 			try:
 				#self.DownloadImages("park", p, path, maxresults)
-				self.GetImageData("park", p, path, maxresults)
+				self.GetImageData("park", p, maxresults)
 			except:
 				print sys.exc_info()
 				pass		
@@ -111,12 +111,12 @@ class GoogleImageGetter():
 			print "Downloading images for {}, max results = {}".format(b, maxresults)
 			try:
 				#self.DownloadImages("bird", b, path, maxresults)
-				self.GetImageData("bird", b, path, maxresults)
+				self.GetImageData("bird", b, maxresults)
 			except:
 				print sys.exc_info()
 				pass
 
-	def GetImageData(self, category, query, path, maxresults):
+	def GetImageData(self, category, query, maxresults):
 		
 		BASE_URL = 'https://ajax.googleapis.com/ajax/services/search/images?'\
 					'v=1.0&q=' + query + '&start=%d'
@@ -204,22 +204,21 @@ class GoogleImageGetter():
 if __name__ == "__main__":
 
 	gi = GoogleImageGetter()
-	gi.GetBirdsFromFile("shortbirds.txt")
+	gi.GetBirdsFromFile("birds.txt")
 	#gi.GetBirdsFromWiki()
-	gi.Print("birds","count")
-	gi.DownloadBirdImages("./bird_output",2)
+	gi.DownloadBirdImages("./bird_output")
 	#gi.DownloadBirdImages("./bird_output",16)
 	#print gi.HaveBird("Ovenbird")
 
 	#gi.GetParksFromWiki()
-	#gi.GetParksFromFile("shortparks.txt")
+	gi.GetParksFromFile("parks.txt")
 	#gi.Print("parks","count")
 	#print gi.HavePark("Yosemite")
 
 	#gi.AddPark("Prospect Park")
 	#gi.AddPark("Central Park")
 	#gi.Print("parks","names")
-	#gi.DownloadParkImages("./park_output", 16)
+	gi.DownloadParkImages("./park_output")
 
 
 #	DownloadImages('bird', 'bird_downloads')
