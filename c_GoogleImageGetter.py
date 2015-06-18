@@ -100,7 +100,8 @@ class GoogleImageGetter():
 		for p in self._parks:
 			print "Downloading images for {}, max results = {}".format(p, maxresults)
 			try:
-				self.DownloadImages("park", p, path, maxresults)
+				#self.DownloadImages("park", p, path, maxresults)
+				self.GetImageData("park", p, path, maxresults)
 			except:
 				print sys.exc_info()
 				pass		
@@ -109,10 +110,42 @@ class GoogleImageGetter():
 		for b in self._birds:
 			print "Downloading images for {}, max results = {}".format(b, maxresults)
 			try:
-				self.DownloadImages("bird", b, path, maxresults)
+				#self.DownloadImages("bird", b, path, maxresults)
+				self.GetImageData("bird", b, path, maxresults)
 			except:
 				print sys.exc_info()
 				pass
+
+	def GetImageData(self, category, query, path, maxresults):
+		
+		BASE_URL = 'https://ajax.googleapis.com/ajax/services/search/images?'\
+					'v=1.0&q=' + query + '&start=%d'
+
+		start = 0
+		while start < maxresults:
+			try:
+				r = requests.get(BASE_URL % start)
+				for image_info in json.loads(r.text)['responseData']['results']:
+					try:
+						j = {}
+						j['category'] = category
+						j['query'] = query
+						j['image_info'] = image_info
+						js = json.loads(json.dumps(j))
+						self._collection.insert(js)
+					except:
+						print "Insertion error"
+						print sys.exc_info()
+						pass
+		
+			except:
+				print "Bad request: {}".format(BASE_URL)
+				print sys.exc_info()
+				pass
+
+			start += 4
+			time.sleep(1.5)
+				
 
 	def DownloadImages(self, category, query, path, maxresults):
 		# Credit where credit is due
@@ -175,17 +208,18 @@ if __name__ == "__main__":
 	#gi.GetBirdsFromWiki()
 	gi.Print("birds","count")
 	gi.DownloadBirdImages("./bird_output",2)
+	#gi.DownloadBirdImages("./bird_output",16)
 	#print gi.HaveBird("Ovenbird")
 
 	#gi.GetParksFromWiki()
-	#gi.GetParksFromFile("parks.txt")
-	#gi.Print("parks","names")
+	#gi.GetParksFromFile("shortparks.txt")
+	#gi.Print("parks","count")
 	#print gi.HavePark("Yosemite")
 
 	#gi.AddPark("Prospect Park")
 	#gi.AddPark("Central Park")
 	#gi.Print("parks","names")
-	#gi.DownloadParkImages("./data/images/park_output", 2)
+	#gi.DownloadParkImages("./park_output", 16)
 
 
 #	DownloadImages('bird', 'bird_downloads')
