@@ -7,12 +7,18 @@ from PIL import Image
 from StringIO import StringIO
 from requests.exceptions import ConnectionError
 from bs4 import BeautifulSoup
+from pymongo import MongoClient
 
 class GoogleImageGetter():
 
 	def __init__(self):
 		self._birds = []
 		self._parks = []
+
+		# initialize mongo client settings
+		self._MC = MongoClient()
+		self._db = self._MC.db_GoogleDownloads
+		self._collection = self._db.Images
 
 	def GetBirdsFromWiki(self):
 		self._birds = self.GetBirdsList()
@@ -75,7 +81,6 @@ class GoogleImageGetter():
 			except:
 				pass
 
-
 		return birdnames
 
 	def GetNationalParkList(self):
@@ -95,29 +100,62 @@ class GoogleImageGetter():
 		for p in self._parks:
 			print "Downloading images for {}, max results = {}".format(p, maxresults)
 			try:
-				self.DownloadImages(p, path, maxresults)
+				#self.DownloadImages("park", p, path, maxresults)
+				self.GetImageData("park", p, maxresults)
 			except:
-				with open('errors.log', 'a') as f:
-					f.write(p + '\t' + sys.exc_info())
+				print sys.exc_info()
 				pass		
 
 	def DownloadBirdImages(self, path, maxresults=60):
 		for b in self._birds:
 			print "Downloading images for {}, max results = {}".format(b, maxresults)
 			try:
-				self.DownloadImages(b, path, maxresults)
+				#self.DownloadImages("bird", b, path, maxresults)
+				self.GetImageData("bird", b, maxresults)
 			except:
-				with open('errors.log', 'a') as f:
-					f.write(b + '\t' + sys.exc_info())
+				print sys.exc_info()
+				pass
 
-	def DownloadImages(self, query, path, maxresults):
+	def GetImageData(self, category, query, maxresults):
+		
+		BASE_URL = 'https://ajax.googleapis.com/ajax/services/search/images?'\
+					'v=1.0&q=' + query + '&start=%d'
+
+		start = 0
+		while start < maxresults:
+			try:
+				r = requests.get(BASE_URL % start)
+				for image_info in json.loads(r.text)['responseData']['results']:
+					try:
+						j = {}
+						j['category'] = category
+						j['query'] = query
+						j['image_info'] = image_info
+						js = json.loads(json.dumps(j))
+						self._collection.insert(js)
+					except:
+						print "Insertion error"
+						print sys.exc_info()
+						pass
+		
+			except:
+				print "Bad request: {}".format(BASE_URL)
+				print sys.exc_info()
+				pass
+
+			start += 4
+			time.sleep(1.5)
+				
+
+	def DownloadImages(self, category, query, path, maxresults):
 		# Credit where credit is due
 		# https://gist.github.com/crizCraig/2816295 
 		
 		BASE_URL = 'https://ajax.googleapis.com/ajax/services/search/images?'\
 					'v=1.0&q=' + query + '&start=%d'
 	 
-		BASE_PATH = os.path.join(path, query)
+		#BASE_PATH = os.path.join(path, query)
+		BASE_PATH = path
 	 
 		if not os.path.exists(BASE_PATH):
 			os.makedirs(BASE_PATH)
@@ -140,6 +178,18 @@ class GoogleImageGetter():
 			file = open(os.path.join(BASE_PATH, '%s.jpg') % title, 'w')
 			try:
 				Image.open(StringIO(image_r.content)).save(file, 'JPEG')
+				
+				j = {}
+				j['category'] = category
+				j['query'] = query
+				j['url'] = BASE_URL
+				j['base path'] = BASE_PATH
+				j['base title'] = title_base
+				j['title'] = title
+		
+				js = json.loads(json.dumps(j))
+				self._collection.insert(js)
+		
 			except IOError, e:
 				print 'could not save %s' % url
 				continue
@@ -154,21 +204,21 @@ class GoogleImageGetter():
 if __name__ == "__main__":
 
 	gi = GoogleImageGetter()
-	#gi.GetBirdsFromFile("shortbirds.txt")
+	gi.GetBirdsFromFile("birds.txt")
 	#gi.GetBirdsFromWiki()
-	#gi.Print("birds","count")
-	#gi.DownloadBirdImages("./bird_output",2)
+	gi.DownloadBirdImages("./bird_output")
+	#gi.DownloadBirdImages("./bird_output",16)
 	#print gi.HaveBird("Ovenbird")
 
 	#gi.GetParksFromWiki()
-	#gi.GetParksFromFile("parks.txt")
-	#gi.Print("parks","names")
+	gi.GetParksFromFile("parks.txt")
+	#gi.Print("parks","count")
 	#print gi.HavePark("Yosemite")
 
-	gi.AddPark("Prospect Park")
-	gi.AddPark("Central Park")
-	gi.Print("parks","names")
-	gi.DownloadParkImages("./park_output", 2)
+	#gi.AddPark("Prospect Park")
+	#gi.AddPark("Central Park")
+	#gi.Print("parks","names")
+	gi.DownloadParkImages("./park_output")
 
 
 #	DownloadImages('bird', 'bird_downloads')
