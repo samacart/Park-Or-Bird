@@ -7,12 +7,19 @@ from PIL import Image
 from StringIO import StringIO
 from requests.exceptions import ConnectionError
 from bs4 import BeautifulSoup
+from pymongo import MongoClient
+
 
 class GoogleImageGetter():
 
 	def __init__(self):
 		self._birds = []
 		self._parks = []
+
+		# initialize mongo client settings
+		self._MC = MongoClient()
+		self._db = client.db_GoogleDownloads
+		self._collection = self._db.Images
 
 	def GetBirdsFromWiki(self):
 		self._birds = self.GetBirdsList()
@@ -161,14 +168,14 @@ if __name__ == "__main__":
 	#print gi.HaveBird("Ovenbird")
 
 	#gi.GetParksFromWiki()
-	#gi.GetParksFromFile("parks.txt")
-	#gi.Print("parks","names")
-	#print gi.HavePark("Yosemite")
+	gi.GetParksFromFile("parks.txt")
+	gi.Print("parks","names")
+	print gi.HavePark("Yosemite")
 
 	gi.AddPark("Prospect Park")
 	gi.AddPark("Central Park")
 	gi.Print("parks","names")
-	gi.DownloadParkImages("./park_output", 2)
+	gi.DownloadParkImages("./data/images/park_output", 2)
 
 
 #	DownloadImages('bird', 'bird_downloads')
