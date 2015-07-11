@@ -26,7 +26,7 @@ if __name__ == "__main__":
         try:
             #get raw image and resize with aspect ratio
             #average size determined by prior code analysis
-            raw_img = Image.open(fn).resize((200,100), PIL.Image.ANTIALIAS)
+            raw_img = Image.open(fn).resize((478,398), PIL.Image.ANTIALIAS)
 
             #convert to gray scale
             gs_img = raw_img.convert("L")
