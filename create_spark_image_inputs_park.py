@@ -20,7 +20,7 @@ def writeOutput(outFile, img):
 
 if __name__ == "__main__":
 
-    dir_path = '/gpfs/gpfsfpo/Park/*.jpg'
+    path = '/gpfs/gpfsfpo/Park/*.jpg'
 
     for fn in glob.glob(path):
         try:
@@ -43,4 +43,4 @@ if __name__ == "__main__":
 
         except:
             with open('/gpfs/gpfsfpo/shared/park_errors.log','a') as err:
-                err.write(fn + "\t" + sys.exc_info())
+                err.write(fn)
