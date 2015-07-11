@@ -1,5 +1,7 @@
 import glob
+import PIL
 from PIL import Image
+from PIL import ImageFilter
 import numpy as np
 import os
 import sys
@@ -43,4 +45,4 @@ if __name__ == "__main__":
 
         except:
             with open('/gpfs/gpfsfpo/shared/park_errors.log','a') as err:
-                err.write(fn)
+                err.write(fn + "\n")
