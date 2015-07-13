@@ -10,9 +10,9 @@ import gzip
 
 def worker(num):
 
-    path = '/gpfs/gpfsfpo/Bird/*' + str(num) + '.jpg'
-    outFile = '/gpfs/gpfsfpo/bird_ml/bird_mp_' + str(num) + '.txt.gz'
-    errFile = '/gpfs/gpfsfpo/bird_err_' + str(num) + '.txt'
+    path = '/gpfs/gpfsfpo/Park/*' + str(num) + '.jpg'
+    outFile = '/gpfs/gpfsfpo/park_ml/bird_mp_' + str(num) + '.txt.gz'
+    errFile = '/gpfs/gpfsfpo/park_err_' + str(num) + '.txt'
 
     with gzip.open(outFile, 'ab') as f:
         for fn in glob.glob(path):
