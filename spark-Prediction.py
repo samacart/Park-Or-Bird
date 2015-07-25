@@ -19,7 +19,15 @@ def CreateFromFile(f, outfile):
         pOut.write(ProcessImage(f))
 
 def CreateFromDirectory(d, outfile):
-    print "Create from dir"
+    with gzip.open(outfile, 'ab') as pOut:
+        for fn in glob.glob(d+'/*.jpg'):
+            print fn
+            try:
+                pOut.write(ProcessImage(fn) + '\n')
+            except:
+                print "Error with: {}".format(fn)
+                print sys.exc_info()
+                pass
 
 def CreateTestData(path_or_file, outfile):
 
@@ -37,7 +45,7 @@ def main():
     sc = SparkContext(appName="Park Bird Predction Model 1")
     CreateTestData(sys.argv[1], outfile)
 
-    raw_input = sc.textFile('/gpfs/gpfsfpo/prediction/predict_me.txt.gz')
+    raw_input = sc.textFile(outfile)
     k = raw_input.map(lambda x: x.split(',')[0])
     p = raw_input.map(lambda x: x.split(',')[1]).map(lambda x: x.split(' ')).map(lambda x: [float(y) for y in x])
 
