@@ -1,5 +1,6 @@
 from pyspark.mllib.regression import LabeledPoint
 from pyspark.mllib.classification import LogisticRegressionModel
+from pyspark.mllib.linalg import Vectors
 from pyspark import SparkContext
 import os
 import glob
@@ -47,7 +48,7 @@ def main():
 
     raw_input = sc.textFile(outfile)
     k = raw_input.map(lambda x: x.split(',')[0])
-    p = raw_input.map(lambda x: x.split(',')[1]).map(lambda x: x.split(' ')).map(lambda x: [float(y) for y in x])
+    p = raw_input.map(lambda x: x.split(',')[1]).map(lambda x: x.split(' ')).map(lambda x: [float(y) for y in x]).map(lambda x: Vectors.dense(x))
 
     model = LogisticRegressionModel.load(sc, '/gpfs/gpfsfpo/shared/model_1_LBFGS')
     predictions = model.predict(p)
