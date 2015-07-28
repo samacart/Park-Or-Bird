@@ -7,8 +7,7 @@ import org.apache.spark.mllib.tree.DecisionTree
 import org.apache.spark.mllib.tree.model.DecisionTreeModel
 import org.apache.spark.mllib.linalg.Vector
 import org.apache.spark.mllib.stat.{MultivariateStatisticalSummary, Statistics}
-import org.apache.spark.mllib.feature.PCA
-
+import org.apache.spark.mllib.feature.{PCA, StandardScaler}
 
 object model_pca_1 {
 
@@ -17,11 +16,11 @@ object model_pca_1 {
         val conf = new SparkConf().setAppName("Model_PCA_1")
         val sc = new SparkContext(conf)
 
-        //val birds = sc.textFile("/gpfs/gpfsfpo/small_test/4_bird_test.txt")
-        //val parks = sc.textFile("/gpfs/gpfsfpo/small_test/4_park_test.txt")
+        val birds = sc.textFile("/gpfs/gpfsfpo/bird_ml_rdx/train/")
+        val parks = sc.textFile("/gpfs/gpfsfpo/park_ml_rdx")
 
-        val birds = sc.textFile("/gpfs/gpfsfpo/bird_raw_ml_2/bird_mp_0.txt.gz")
-        val parks = sc.textFile("/gpfs/gpfsfpo/park_raw_ml_2")
+        //val birds = sc.textFile("/gpfs/gpfsfpo/bird_raw_ml_2/bird_mp_0.txt.gz")
+        //val parks = sc.textFile("/gpfs/gpfsfpo/park_raw_ml_2")
 
         val b = birds.map(x => x.split(',')(1)).map(_.split(" ")).map(x=>x.map(_.toDouble)).map(x=>LabeledPoint(1,Vectors.dense(x)))
         val p = parks.map(x => x.split(',')(1)).map(_.split(" ")).map(x=>x.map(_.toDouble)).map(x=>LabeledPoint(0,Vectors.dense(x)))
@@ -30,10 +29,14 @@ object model_pca_1 {
 
         val Array(training,test) = b.randomSplit(Array(0.7,0.3))
 
-        val pca = new PCA(10).fit(training.map(_.features))
+        val scaler = new StandardScaler().fit(training.map(x=>x.features))
+        val train_scaled = training.map(x=>LabeledPoint(x.label, scaler.transform(x.features)))
+        val test_scaled = test.map(x=>LabeledPoint(x.label, scaler.transform(x.features)))
 
-        val train_projected = training.map(p=>p.copy(features=pca.transform(p.features)))
-        val test_projected = test.map(p=>p.copy(features=pca.transform(p.features)))
+        val pca = new PCA(10).fit(train_scaled.map(_.features))
+
+        val train_projected = train_scaled.map(p=>p.copy(features=pca.transform(p.features)))
+        val test_projected = test_scaled.map(p=>p.copy(features=pca.transform(p.features)))
 
         val model = new LogisticRegressionWithLBFGS()
           .setNumClasses(2)
