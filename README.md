@@ -7,7 +7,7 @@ In computer science, it can be difficult to explain the difference between the e
 We have configured a 3 node cluster with each node having 10 cores and 8 GB of available memory. GPFS is used as a shared filesystem for holding raw image data and Spark analysis inputs. Spark 1.4.0 is deployed across the entire cluster to minimize network traffic for source files. Due to write affinity with GPFS, we execute all transformation and data preparation scripts on the appropriate node for the stored files. Birds were stored on a single node, Parks on a single node, and Other on a single node. Spark is configured to use 6 GB of memory per executor and driver.
 
 #Search and Data Cleansing
-For our tests, we used the Flickr API to gather creative-commons licensed images and divided with user-tag searches for "park" or "birds". This included specific species and park names. We did an exploration in training a classifier to predict clean data by manually labeling 2000 images. Additionally, Solr and Blacklight were deployed as a faceted search interface for the image metadata.
+For our tests, we used the Flickr API to gather creative-commons licensed images and divided with user-tag searches for "park" or "birds". This included specific species and park names. Our initial tests included using the Google Search API. We did an exploration in training a classifier to predict clean data by manually labeling 2000 images. Additionally, Solr and Blacklight were deployed as a faceted search interface for the image metadata.
 
 #Feature Extraction
 We tested three variations of feature extraction for training. Our techniques create compressed files for analysis, and are configured to run in parallel on 10 CPUs per node in the cluster.
