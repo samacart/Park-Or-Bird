@@ -1,8 +1,6 @@
 # Park-or-bird
 In computer science, it can be difficult to explain the difference between the easy and the virtually impossible. We were inspired by an <a href="http://xkcd.com/1425/">xkcd comic</a> to take the “park or bird” challenge using Spark and MLlib. Our goal is to build a scalable system for image processing: ingesting raw images, converting images to machine learning features, training a classifier, and ultimately building a deployable scalable prediction engine based on Spark.
 
-![Alt text](http://imgs.xkcd.com/comics/tasks.png "XKCD inspiration")
-
 #Cluster Configuration
 We have configured a 3 node cluster with each node having 10 cores and 8 GB of available memory. GPFS is used as a shared filesystem for holding raw image data and Spark analysis inputs. Spark 1.4.0 is deployed across the entire cluster to minimize network traffic for source files. Due to write affinity with GPFS, we execute all transformation and data preparation scripts on the appropriate node for the stored files. Birds were stored on a single node, Parks on a single node, and Other on a single node. Spark is configured to use 6 GB of memory per executor and driver.
 
@@ -38,3 +36,60 @@ p = parks.map(lambda x: x.split(',')[1])
 	.map(lambda x: [float(y) for y in x])
 	.map(lambda x: Vectors.dense(x))
 ```
+
+#PySpark Prediction Engine
+Our trained models (without the standard scaler and PCA) can be saved to disk and used in PySpark for prediction. The prediction routine will take either a single image, or a directory of images (jpg), apply the appropriate pre-processing, and generate a predicted label.
+
+```
+# /usr/local/spark/bin/spark-submit spark-Predictor.py --help
+usage: spark-Predictor.py [-h] --i I --m M
+
+Park or Bird Prediction Engine
+
+optional arguments:
+  -h, --help         show this help message and exit
+  --i I, --input I   Input file or directory of jpg images
+  --m M, --method M  Model method, 1 or 2
+
+# /usr/local/spark/bin/spark-submit spark-Predictor.py
+--i /gpfs/gpfsfpo/pred_test/ --m 1
+
+/gpfs/gpfsfpo/pred_test/8216542107.jpg
+/gpfs/gpfsfpo/pred_test/503215945.jpg
+/gpfs/gpfsfpo/pred_test/2792971789.jpg
+/gpfs/gpfsfpo/pred_test/3655965983.jpg
+/gpfs/gpfsfpo/pred_test/2792971788.jpg
+/gpfs/gpfsfpo/pred_test/p_14296153.jpg
+/gpfs/gpfsfpo/pred_test/8216542102.jpg
+/gpfs/gpfsfpo/pred_test/5412441551.jpg
+/gpfs/gpfsfpo/pred_test/p_2511878805.jpg
+/gpfs/gpfsfpo/pred_test/5412441554.jpg
+/gpfs/gpfsfpo/pred_test/p_534861364.jpg
+/gpfs/gpfsfpo/pred_test/503215946.jpg
+/gpfs/gpfsfpo/pred_test/8216542100.jpg
+
+************* RESULTS *******************
+[(u'8216542107.jpg', "IT'S A BIRD!"), (u'503215945.jpg', "IT'S A BIRD!"),
+(u'2792971789.jpg', "IT'S A BIRD!"), (u'3655965983.jpg', "IT'S A BIRD!"),
+(u'2792971788.jpg', "IT'S A BIRD!"), (u'p_14296153.jpg', "IT'S A BIRD!"),
+(u'8216542102.jpg', "IT'S A BIRD!"), (u'5412441551.jpg', "IT'S A BIRD!"),
+(u'p_2511878805.jpg', "IT'S A BIRD!"), (u'5412441554.jpg', "IT'S A BIRD!"),
+(u'p_534861364.jpg', "IT'S A BIRD!"), (u'503215946.jpg', "IT'S A BIRD!"),
+(u'8216542100.jpg', "IT'S A BIRD!")]
+```
+
+#Conclusions
+We have demonstrated that Spark 1.4.0 can be used for image classification with logistic regression models in a scalable fashion. Our end-to-end solution provides a framework for:
+<ol>
+<li>Gathering image metadata in a searchable form stored in MongoDB.
+<li>Collecting images based on metadata criteria and storing them in a scalable cluster.
+<li>Examining and cleaning the data through a viewable portal.
+<li>Index images and metadata for further investigation and faceted search.
+<li>Training a machine learning model to further classify cleaned data given enough samples.
+<li>Determining the average dimensions of all gathered data for potential resizing.
+<li>Applying multiple image feature extraction techniques to the data based on resizing and scale invariant features such as the RGB block ratio or ORB algorithm.
+<li>Applying parallelization techniques to image processing, and storing all outputs in chunked and compressed form for analysis.
+<li>Training multiple machine learning models on diverse feature spaces, varying from 64 to 20,340 features across 400,000 samples.
+<li>Applying standard scaler methods and principal component analysis for dimensionality reduction.
+<li>Using the trained models in a deployable prediction engine built on PySpark which can take multiple model options, an input file, or an input directory, and generate classification predictions.
+</ol>
