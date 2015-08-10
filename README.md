@@ -1,7 +1,7 @@
 # Park-or-bird
 **Contributors: Evan Kepner, Joan Qiu, Simon Macarthur**
 
-In computer science, it can be difficult to explain the difference between the easy and the virtually impossible. We were inspired by an <a href="http://xkcd.com/1425/">xkcd comic</a> to take the “park or bird” challenge using Spark and MLlib. Our goal is to build a scalable system for image processing: ingesting raw images, converting images to machine learning features, training a classifier, and ultimately building a deployable scalable prediction engine based on Spark.
+In computer science, it can be difficult to explain the difference between the easy and the virtually impossible. We were inspired by an <a href="http://xkcd.com/1425/" target="_blank">xkcd comic</a> to take the “park or bird” challenge using Spark and MLlib. Our goal is to build a scalable system for image processing: ingesting raw images, converting images to machine learning features, training a classifier, and ultimately building a deployable scalable prediction engine based on Spark.
 
 #Cluster Configuration
 We have configured a 3 node cluster with each node having 10 cores and 8 GB of available memory. GPFS is used as a shared filesystem for holding raw image data and Spark analysis inputs. Spark 1.4.0 is deployed across the entire cluster to minimize network traffic for source files. Due to write affinity with GPFS, we execute all transformation and data preparation scripts on the appropriate node for the stored files. Birds were stored on a single node, Parks on a single node, and Other on a single node. Spark is configured to use 6 GB of memory per executor and driver.
@@ -25,7 +25,7 @@ Features are stored in key-value pairs for ease of processing in Scala and PySpa
 
 This lets us break the key-value on the comma, and then parse the value string by spaces:
 
-Scala:
+**Scala:**
 ```
 val parks = sc.textFile("/gpfs/gpfsfpo/park_raw_ml")
 val p = parks.map(x => x.split(',')(1))
@@ -33,7 +33,7 @@ val p = parks.map(x => x.split(',')(1))
 	.map(x=>x.map(_.toDouble))
 ```
 
-PySpark:
+**PySpark:**
 ```
 parks = sc.textFile("/gpfs/gpfsfpo/park_raw_ml")
 p = parks.map(lambda x: x.split(',')[1])
