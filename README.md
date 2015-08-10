@@ -1,5 +1,6 @@
 # Park-or-bird
 **Contributors: Evan Kepner, Joan Qiu, Simon Macarthur**
+
 In computer science, it can be difficult to explain the difference between the easy and the virtually impossible. We were inspired by an <a href="http://xkcd.com/1425/">xkcd comic</a> to take the “park or bird” challenge using Spark and MLlib. Our goal is to build a scalable system for image processing: ingesting raw images, converting images to machine learning features, training a classifier, and ultimately building a deployable scalable prediction engine based on Spark.
 
 #Cluster Configuration
