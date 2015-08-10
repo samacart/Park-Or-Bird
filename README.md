@@ -1,11 +1,15 @@
 # Park-or-bird
+**Contributors: Evan Kepner, Joan Qiu, Simon Macarthur**
 In computer science, it can be difficult to explain the difference between the easy and the virtually impossible. We were inspired by an <a href="http://xkcd.com/1425/">xkcd comic</a> to take the “park or bird” challenge using Spark and MLlib. Our goal is to build a scalable system for image processing: ingesting raw images, converting images to machine learning features, training a classifier, and ultimately building a deployable scalable prediction engine based on Spark.
 
 #Cluster Configuration
 We have configured a 3 node cluster with each node having 10 cores and 8 GB of available memory. GPFS is used as a shared filesystem for holding raw image data and Spark analysis inputs. Spark 1.4.0 is deployed across the entire cluster to minimize network traffic for source files. Due to write affinity with GPFS, we execute all transformation and data preparation scripts on the appropriate node for the stored files. Birds were stored on a single node, Parks on a single node, and Other on a single node. Spark is configured to use 6 GB of memory per executor and driver.
 
+#Search and Data Cleansing
+For our tests, we used the Flickr API to gather creative-commons licensed images and divided with user-tag searches for "park" or "birds". This included specific species and park names. We did an exploration in training a classifier to predict clean data by manually labeling 2000 images. Additionally, Solr and Blacklight were deployed as a faceted search interface for the image metadata.
+
 #Feature Extraction
-We tested three variations of feature extraction for training:
+We tested three variations of feature extraction for training. Our techniques create compressed files for analysis, and are configured to run in parallel on 10 CPUs per node in the cluster.
 <ol>
 <li>Finding the average image dimensions, rescaling to 20%, and then flattening the full RGB array. For our average image size this resulted in 20,340 features per label.
 <li>Using the RGB Ratio reduction in blocks. We limited to 64 features per label with this technique.
