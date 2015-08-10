@@ -1,4 +1,5 @@
-# Park or Bird? An XKCD Inspired Distributed Image Processing and Machine Learning Classifier using Spark
+# Park or Bird?
+### An XKCD Inspired Distributed Image Processing and Machine Learning Classifier using Spark
 **Contributors: Evan Kepner, Joan Qiu, Simon Macarthur**
 
 In computer science, it can be difficult to explain the difference between the easy and the virtually impossible. We were inspired by an <a href="http://xkcd.com/1425/" target="_blank">xkcd comic</a> to take the “park or bird” challenge using Spark and MLlib. Our goal is to build a scalable system for image processing: ingesting raw images, converting images to machine learning features, training a classifier, and ultimately building a deployable scalable prediction engine based on Spark.
